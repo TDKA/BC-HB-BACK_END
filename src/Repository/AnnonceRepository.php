@@ -55,7 +55,7 @@ class AnnonceRepository extends ServiceEntityRepository
      *
      */
 
-    public function findBySearch($brand = false, $modele = false, $fuelType = false, $kilometers = false, $circulationYear = false, $price = false)
+    public function findBySearch($brand = false, $modele = false, $fuel = false, $kilometers = false, $circulationYear = false, $price = false)
     {
         $parameters = new ArrayCollection();
         $qb = $this->createQueryBuilder('a');
@@ -68,10 +68,10 @@ class AnnonceRepository extends ServiceEntityRepository
             $qb->andWhere('a.modele = :modele');
             $parameters->add(new Parameter('modele', $modele));
         }
-        // if ($fuelType) {
-        //     $qb->andWhere('a.fuelType = :fuelType');
-        //     $parameters->add(new Parameter('fuelType', $fuelType));
-        // }
+        if ($fuel) {
+            $qb->andWhere('a.fuel = :fuel');
+            $parameters->add(new Parameter('fuel', $fuel));
+        }
         // if ($kilometers) {
         //     $qb->andWhere('a.kilometers >= :kilometersMin');
         //     $parameters->add(new Parameter('kilometersMin', $kilometers[0]));

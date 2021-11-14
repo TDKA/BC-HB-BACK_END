@@ -10,6 +10,7 @@ use App\Repository\BrandRepository;
 use App\Repository\GarageRepository;
 use App\Repository\ModeleRepository;
 use App\Repository\AnnonceRepository;
+use App\Repository\FuelRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -140,12 +141,13 @@ class AnnonceController extends AbstractController
     public function add(
         Request $req,
         SerializerInterface $serializer,
-        EntityManagerInterface $emi,
+        EntityManagerInterface $manager,
         UserRepository $userRepo,
         GarageRepository $garageRepo,
         UserInterface $currentUser,
         BrandRepository $brandRepo,
-        ModeleRepository $modelRepo
+        ModeleRepository $modelRepo,
+        FuelRepository $fuelRepo
     ): Response {
 
         if (!$this->getUser()) {
@@ -155,35 +157,32 @@ class AnnonceController extends AbstractController
 
 
         if ($isAdmin || $this->getUser()) {
-
+            //AnnoncesJson
             $annonceJson = $req->getContent();
             $annonce = $serializer->deserialize($annonceJson, Annonce::class, 'json');
-            // dd('coucou');
+            // Brands
             $arrayBrands = $req->toArray('brand');
             $brand = $brandRepo->findOneBy(["id" => $arrayBrands["brand"]]);
-            // $brand = $brandRepo->findOneBy(["id" => $req->toArray('brand')]);
+            //Models
             $arrayModels = $req->toArray('modele');
-            //dd($id["modele_id"]);
             $modele = $modelRepo->findOneBy(["id" => $arrayModels["modele"]]);
-
-            // dd($req->toArray('modele'));
-            //$modele = $modelRepo->find($req->toArray('modele'));
-            // dd($modele);
+            //Fuels
+            $arrayFuels = $req->toArray('fuel');
+            $fuel = $fuelRepo->findOneBy(["id" => $arrayFuels["fuel"]]);
+            //Garages
             $garage = $garageRepo->findOneBy(["id" => $req->toArray('garage')]);
 
             // $user = $userRepo->findOneBy(["id" => $req->toArray('user')]);
             $user = $this->getUser();
             $annonce->setUser($user);
-
+            $annonce->setFuel($fuel);
             $annonce->setBrand($brand);
             $annonce->setModele($modele);
             $annonce->setGarage($garage);
             $annonce->setCreatedAt(new \DateTime());
 
-
-
-            $emi->persist($annonce);
-            $emi->flush();
+            $manager->persist($annonce);
+            $manager->flush();
             return $this->json(["message" => "C'est fait ! Votre annonce a été enregistré !"], 200, []);
         }
         return $this->json(["message" => "Ops, il y a un problem !"], 200, []);
@@ -199,11 +198,12 @@ class AnnonceController extends AbstractController
     public function edit(
         Request $req,
         SerializerInterface $serializer,
-        EntityManagerInterface $emi,
+        EntityManagerInterface $manager,
         UserRepository $userRepo,
         GarageRepository $garageRepo,
         BrandRepository $brandRepo,
         ModeleRepository $modeleRepo,
+        FuelRepository $fuelRepo,
         Annonce $annonce
     ) { {
             if (!$this->getUser()) {
@@ -220,13 +220,13 @@ class AnnonceController extends AbstractController
                 $annonce->setReference($annonceObj->getReference());
                 $annonce->setPrice($annonceObj->getPrice());
                 $annonce->setKm($annonceObj->getKm());
-                $annonce->setFuel($annonceObj->getFuel());
                 $annonce->setYear($annonceObj->getYear());
                 $annonce->setCreatedAt(new \DateTime());
 
 
                 $brand = $brandRepo->findOneBy(["id" => $req->toArray('brand')]);
                 $modele = $modeleRepo->findOneBy(["id" => $req->toArray('modele')]);
+                $fuel = $fuelRepo->findOneBy(["id" => $req->toArray('fuel')]);
                 $garage = $garageRepo->findOneBy(["id" => $req->toArray('garage')]);
                 // $user = $userRepo->findOneBy(["id" => $req->toArray('user')]);
                 $user = $this->getUser();
@@ -234,11 +234,12 @@ class AnnonceController extends AbstractController
 
 
                 $annonce->setBrand($brand);
+                $annonce->setFuel($fuel);
                 $annonce->setModele($modele);
                 $annonce->setGarage($garage);
 
-                $emi->persist($annonce);
-                $emi->flush();
+                $manager->persist($annonce);
+                $manager->flush();
                 return $this->json(["message" => "Modification réussi !"], 200, []);
             }
             return $this->json(["message" => "Il y a un problem là !"], 200, []);
@@ -252,7 +253,7 @@ class AnnonceController extends AbstractController
     {
         $data = $request->toArray();
 
-        $annonces = $repository->findBySearch($data['brand'], $data['modele']);
+        $annonces = $repository->findBySearch($data['brand'], $data['modele'], $data['fuel']);
 
         return $this->json($annonces, 200, [], ['groups' => 'annonce']);
     }

@@ -62,12 +62,6 @@ class Annonce
     private $year;
 
     /**
-     * @ORM\Column(type="string", length=255)
-     * @Groups({"annonce", "brand", "modele"})
-     */
-    private $fuel;
-
-    /**
      * @ORM\ManyToOne(targetEntity=Brand::class, inversedBy="annonces")
      * @ORM\JoinColumn(nullable=false)
      * @Groups({"brand", "annonce", "modele"})
@@ -93,6 +87,13 @@ class Annonce
      * @Groups({"brand", "annonce", "modele"})
      */
     private $modele;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Fuel::class, inversedBy="annonces", cascade={"persist"})
+     * @Groups({ "annonce", "modele"})
+     */
+    private $fuel;
+
 
     public function getId(): ?int
     {
@@ -183,17 +184,6 @@ class Annonce
         return $this;
     }
 
-    public function getFuel(): ?string
-    {
-        return $this->fuel;
-    }
-
-    public function setFuel(string $fuel): self
-    {
-        $this->fuel = $fuel;
-
-        return $this;
-    }
 
     public function getBrand(): ?Brand
     {
@@ -239,6 +229,18 @@ class Annonce
     public function setModele(?Modele $modele): self
     {
         $this->modele = $modele;
+
+        return $this;
+    }
+
+    public function getFuel(): ?Fuel
+    {
+        return $this->fuel;
+    }
+
+    public function setFuel(?Fuel $fuel): self
+    {
+        $this->fuel = $fuel;
 
         return $this;
     }
